@@ -1,17 +1,15 @@
-FROM ubuntu:latest AS build
 
-RUN apt-get update
-RUN apt-get install openjdk-17-jdk -y
-
+FROM maven:3.9.4-eclipse-temurin-21 AS build
+WORKDIR /app
 COPY . .
+RUN mvn clean package -DskipTests
 
-RUN apt-get install maven -y
-RUN mvn clean install
+FROM eclipse-temurin:21-jdk
+WORKDIR /app
 
-FROM openjdk:17-jdk-slim
-
-EXPOSE 8080
+# Instalar nano
+RUN apt-get update && apt-get install -y nano && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/target/*.jar app.jar
-
-ENTRYPOINT [ "java", "-jar", "app.jar" ]
+EXPOSE 8080
+ENTRYPOINT ["java", "-Duser.timezone=America/Sao_Paulo", "-jar", "app.jar"]
